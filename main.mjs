@@ -2,18 +2,19 @@ import json from "./新华词典.json" assert {type: 'json'}
 import ExcelJS from "exceljs"
 import fs from 'fs'
 
-const VOWEL = ['a', 'o', 'e', 'i', 'u', 'ü', 'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er', 'an', 'en', 'in', 'un', 'ün', 'ang', 'eng', 'ing', 'ong']
+const VOWEL = ['a', 'o', 'e', 'i', 'u', 'ü', 'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er', 'an', 'en', 'in', 'un', 'ün', 'ang', 'eng', 'ing', 'ong',
+            'ia', 'ua', 'uo', 'uan', 'uai', 'ian', 'iao', 'iang', 'uang', 'iong', 'üan']
 const INITIAL = ['', 'b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'sh', 'sh', 'r', 'z', 'c', 's', 'y', 'w']
 
 
 const isOrder = true
-const isROW_concat_COL = true
+const isROW_concat_COL = false
 const isAddZh = true
 const matrix = generateMatrix(isROW_concat_COL, isOrder)
 const pinyin_Zh = getPinyinZhMap()
 
 fillMatrix(matrix, pinyin_Zh, isROW_concat_COL, isAddZh)
-matrix2excel(matrix, 'ROW_COL', 'csv')
+matrix2excel(matrix, 'COL_ROW', 'csv')
 
 
 
@@ -31,6 +32,14 @@ function chunkArray(array, size = 1) {
     return result
 }
 
+
+/**
+ * ROW_COL 表示首列是声母，首行是韵母。
+ * COL_ROW 表示首列是韵母，首行是声母。
+ * @param {*} isROW_concat_COL
+ * @param {*} isOrder
+ * @returns
+ */
 function generateMatrix(isROW_concat_COL = true, isOrder = false) {
     const initial = INITIAL.sort((a, b) => isOrder ? a.charCodeAt() - b.charCodeAt() : 0)
     const vowel = VOWEL.sort((a, b) => isOrder ? a.charCodeAt() - b.charCodeAt() : 0)
@@ -68,6 +77,9 @@ function fillMatrix(matrix, pinyin_Zh, isROW_concat_COL, isAddZh) {
             const pinyin = concatPinyin(isROW_concat_COL, matrix[0][c], matrix[r][0])
             if (pinyin in pinyin_Zh) {
                 matrix[r][c] = `${isAddZh ? pinyin_Zh[pinyin] + ' ' : ''}${pinyin}`
+            } else {
+                // 填充空值，好让 excelJs 生成空单元格（虽然会冗余，但逗号数量一致）
+                matrix[r][c] = ''
             }
         }
     }
